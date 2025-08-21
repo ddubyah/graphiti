@@ -24,13 +24,13 @@ ENV UV_COMPILE_BYTECODE=1 \
 COPY ./pyproject.toml ./README.md ./
 COPY ./graphiti_core ./graphiti_core
 
-# Build graphiti-core wheel
+# Build graphiti-core wheel with FalkorDB support
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv build
 
-# Install the built wheel to make it available for server
+# Install the built wheel with FalkorDB extra to make it available for server
 RUN --mount=type=cache,target=/root/.cache/uv \
-    pip install dist/*.whl
+    pip install "dist/*.whl[falkordb]"
 
 # Runtime stage - build the server here
 FROM python:3.12-slim

@@ -28,9 +28,9 @@ COPY ./graphiti_core ./graphiti_core
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv build
 
-# Install the built wheel with FalkorDB support to make it available for server
+# Install the built wheel to make it available for server
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv pip install --system "dist/*.whl[falkordb]"
+    uv pip install --system dist/*.whl
 
 # Runtime stage - build the server here
 FROM python:3.12-slim
@@ -56,7 +56,7 @@ RUN groupadd -r app && useradd -r -d /app -g app app
 # Copy graphiti-core wheel from builder
 COPY --from=builder /app/dist/*.whl /tmp/
 
-# Install graphiti-core wheel first
+# Install graphiti-core wheel 
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv pip install --system /tmp/*.whl
 
@@ -65,9 +65,9 @@ WORKDIR /app
 COPY ./server/pyproject.toml ./server/README.md ./server/uv.lock ./
 COPY ./server/graph_service ./graph_service
 
-# Install server dependencies and application with FalkorDB support
+# Install server dependencies and application
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-dev --extra falkordb
+    uv sync --no-dev
 
 # Change ownership to app user
 RUN chown -R app:app /app

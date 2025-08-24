@@ -4,7 +4,6 @@ from typing import Annotated
 
 from fastapi import Depends, HTTPException
 from graphiti_core import Graphiti  # type: ignore
-from graphiti_core.driver.falkordb_driver import FalkorDriver  # type: ignore
 from graphiti_core.edges import EntityEdge  # type: ignore
 from graphiti_core.errors import EdgeNotFoundError, GroupsEdgesNotFoundError, NodeNotFoundError
 from graphiti_core.llm_client import LLMClient  # type: ignore
@@ -17,19 +16,8 @@ logger = logging.getLogger(__name__)
 
 
 class ZepGraphiti(Graphiti):
-    def __init__(self, uri: str, user: str, password: str, llm_client: LLMClient | None = None, use_falkordb: bool = False):
-        if use_falkordb:
-            # Extract host from URI (remove bolt:// prefix)
-            falkor_host = uri.replace('bolt://', '').split(':')[0]
-            falkor_driver = FalkorDriver(
-                host=falkor_host,
-                port=6379,  # FalkorDB runs on Redis port
-                username=user if user else None,
-                password=password if password else None
-            )
-            super().__init__(graph_driver=falkor_driver, llm_client=llm_client)
-        else:
-            super().__init__(uri, user, password, llm_client)
+    def __init__(self, uri: str, user: str, password: str, llm_client: LLMClient | None = None):
+        super().__init__(uri, user, password, llm_client)
 
     async def save_entity_node(self, name: str, uuid: str, group_id: str, summary: str = ''):
         new_node = EntityNode(
@@ -85,12 +73,10 @@ class ZepGraphiti(Graphiti):
 
 
 async def get_graphiti(settings: ZepEnvDep):
-    use_falkordb = os.getenv('USE_FALKORDB', 'false').lower() == 'true'
     client = ZepGraphiti(
         uri=settings.neo4j_uri,
         user=settings.neo4j_user,
         password=settings.neo4j_password,
-        use_falkordb=use_falkordb,
     )
     if settings.openai_base_url is not None:
         client.llm_client.config.base_url = settings.openai_base_url
@@ -106,12 +92,10 @@ async def get_graphiti(settings: ZepEnvDep):
 
 
 async def initialize_graphiti(settings: ZepEnvDep):
-    use_falkordb = os.getenv('USE_FALKORDB', 'false').lower() == 'true'
     client = ZepGraphiti(
         uri=settings.neo4j_uri,
         user=settings.neo4j_user,
         password=settings.neo4j_password,
-        use_falkordb=use_falkordb,
     )
     await client.build_indices_and_constraints()
 

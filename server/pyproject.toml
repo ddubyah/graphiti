@@ -16,9 +16,6 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-falkordb = [
-    "falkordb>=1.1.2,<2.0.0",
-]
 dev = [
     "pydantic>=2.8.2",
     "pyright>=1.1.380",
